@@ -19,54 +19,62 @@
 
 using namespace std;
 
-Vector3 lightDirection(0, 1, 4);
+Vector3 lightDirection(0, 2, 1);
 const int lightDirectionLength = lightDirection.length();
-vector<Vector3> model;
 double zBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = { 0 };
 int displayBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = { 0 };
 
 void getModel(int, int);
 
 int main(void) {
-    getModel(TORUS_SCALE, TORUS_WIDTH);
-
-    // Vector3 vector3 = model[10];
-    // printf("{ %.2lf %.2lf %.2lf }\n", vector3.x, vector3.y, vector3.z);
-
-    printf("model length: %zu\n", model.size());
 
     int angleX = 0;
     int angleY = 0;
     int angleZ = 0;
+    double phiStep = toRadians(3);
+    double thetaStep = toRadians(10);
 
     while (true) {
         SetConsoleCursorPosition(0, { 0, 0 });
-        for (Vector3 vector : model) {
 
-            vector.rotateX(toRadians(angleX));
-            vector.rotateY(toRadians(angleY));
-            vector.rotateZ(toRadians(angleZ));
+        for (double phi = 0; phi < M_TAU; phi += phiStep) {
+            for (double theta = 0; theta < M_TAU; theta += thetaStep) {
+                Vector3 vector3(cos(theta) * TORUS_WIDTH, sin(theta) * TORUS_WIDTH, 0);
 
-            double luminance = -lightDirection.dotProduct(vector) / vector.length() / lightDirectionLength;
+                Vector3 luminanceVector(vector3);
 
-            if (luminance <= 0) continue;
-            if (luminance > 1) luminance = 1;
+                vector3.x += TORUS_SCALE;
 
-            vector.z += SCREEN_POSITION + TORUS_POSITION;
+                vector3.rotateY(phi);
+                luminanceVector.rotateY(phi);
 
-            if (vector.z <= SCREEN_POSITION) continue;
+                vector3.rotateX(toRadians(angleX));
+                vector3.rotateY(toRadians(angleY));
+                vector3.rotateZ(toRadians(angleZ));
+                luminanceVector.rotateX(toRadians(angleX));
+                luminanceVector.rotateY(toRadians(angleY));
+                luminanceVector.rotateZ(toRadians(angleZ));
 
-            double oneOverZ = 1 / vector.z;
-            double ratio = SCREEN_POSITION * oneOverZ;
-            int xp = DISPLAY_WIDTH / 2.0 + (vector.x * ratio * DISPLAY_SCALE * 1.8);
-            int yp = DISPLAY_HEIGHT / 2.0 + (vector.y * ratio * DISPLAY_SCALE);
+                double luminance = -(lightDirection.dotProduct(luminanceVector) / luminanceVector.length() / lightDirectionLength);
 
-            if (xp < 0 || yp < 0 || xp >= DISPLAY_WIDTH || yp >= DISPLAY_HEIGHT) continue;
-            if (zBuffer[yp][xp] >= oneOverZ) continue;
+                if (luminance <= 0) continue;
+                if (luminance > 1) luminance = 1;
 
-            zBuffer[yp][xp] = oneOverZ;
-            displayBuffer[yp][xp] = luminance * 12;
-            // printf("%d\n", displayBuffer[yp][xp]);
+                vector3.z += SCREEN_POSITION + TORUS_POSITION;
+
+                if (vector3.z <= SCREEN_POSITION) continue;
+
+                double oneOverZ = 1 / vector3.z;
+                double ratio = SCREEN_POSITION * oneOverZ;
+                int xp = DISPLAY_WIDTH / 2.0 + (vector3.x * ratio * DISPLAY_SCALE * 1.8);
+                int yp = DISPLAY_HEIGHT / 2.0 + (vector3.y * ratio * DISPLAY_SCALE);
+
+                if (xp < 0 || yp < 0 || xp >= DISPLAY_WIDTH || yp >= DISPLAY_HEIGHT) continue;
+                if (zBuffer[yp][xp] >= oneOverZ) continue;
+
+                zBuffer[yp][xp] = oneOverZ;
+                displayBuffer[yp][xp] = luminance * 12;
+            }
         }
         
         for (int y = 0; y < DISPLAY_HEIGHT; y++) {
@@ -91,23 +99,5 @@ int main(void) {
 
 
     return 0;
-}
-
-void getModel(int torusScale, int torusWidth) {
-    double phiStep = toRadians(3);
-    double thetaStep = toRadians(10);
-    // double phiStep = toRadians(15);
-    // double thetaStep = toRadians(10);
-
-    for (double phi = 0; phi < M_TAU; phi += phiStep) {
-        for (double theta = 0; theta < M_TAU; theta += thetaStep) {
-            // printf("{ phi: %6.2lfdeg, theta: %6.2lfdeg }\n", toDegrees(phi), toDegrees(theta));
-            Vector3 vector3(torusScale + cos(theta) * torusWidth, sin(theta) * torusWidth, 0);
-
-            vector3.rotateY(phi);
-
-            model.push_back(vector3);
-        }
-    }
 }
 
