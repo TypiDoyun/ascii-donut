@@ -16,11 +16,12 @@
 #define DISPLAY_WIDTH 80
 #define DISPLAY_HEIGHT 22
 #define DISPLAY_SCALE 4
+#define DISPLAY_FPS 60
 
 using namespace std;
 
-Vector3 lightDirection(0, 2, 1);
-const int lightDirectionLength = lightDirection.length();
+Vector3 lightDirection(0, 1, 2);
+const double lightDirectionLength = lightDirection.length();
 double zBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = { 0 };
 int displayBuffer[DISPLAY_HEIGHT][DISPLAY_WIDTH] = { 0 };
 
@@ -28,9 +29,9 @@ void getModel(int, int);
 
 int main(void) {
 
-    int angleX = 0;
-    int angleY = 0;
-    int angleZ = 0;
+    double angleX = 0;
+    double angleY = 0;
+    double angleZ = 0;
     double phiStep = toRadians(3);
     double thetaStep = toRadians(10);
 
@@ -40,25 +41,20 @@ int main(void) {
         for (double phi = 0; phi < M_TAU; phi += phiStep) {
             for (double theta = 0; theta < M_TAU; theta += thetaStep) {
                 Vector3 vector3(cos(theta) * TORUS_WIDTH, sin(theta) * TORUS_WIDTH, 0);
-
                 Vector3 luminanceVector(vector3);
 
                 vector3.x += TORUS_SCALE;
-
                 vector3.rotateY(phi);
                 luminanceVector.rotateY(phi);
 
                 vector3.rotateX(toRadians(angleX));
-                vector3.rotateY(toRadians(angleY));
                 vector3.rotateZ(toRadians(angleZ));
                 luminanceVector.rotateX(toRadians(angleX));
-                luminanceVector.rotateY(toRadians(angleY));
                 luminanceVector.rotateZ(toRadians(angleZ));
 
-                double luminance = -(lightDirection.dotProduct(luminanceVector) / luminanceVector.length() / lightDirectionLength);
+                int luminance = -round(lightDirection.dotProduct(luminanceVector) / lightDirectionLength * 11);
 
-                if (luminance <= 0) continue;
-                if (luminance > 1) luminance = 1;
+                if (luminance < 0) continue;
 
                 vector3.z += SCREEN_POSITION + TORUS_POSITION;
 
@@ -73,7 +69,7 @@ int main(void) {
                 if (zBuffer[yp][xp] >= oneOverZ) continue;
 
                 zBuffer[yp][xp] = oneOverZ;
-                displayBuffer[yp][xp] = luminance * 12;
+                displayBuffer[yp][xp] = luminance + 1;
             }
         }
         
@@ -90,9 +86,8 @@ int main(void) {
             printf("\n");
         }
 
-        angleX += 3;
-        // angleY += 5;
-        angleZ += 7;
+        angleX += 5;
+        angleZ += 0;
 
         Sleep(33);
     }
