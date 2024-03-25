@@ -10,7 +10,7 @@
 
 #define TORUS_SCALE 2
 #define TORUS_WIDTH 1
-#define TORUS_POSITION 10
+#define TORUS_POSITION 5
 #define SCREEN_POSITION 10
 
 #define DISPLAY_WIDTH 80
@@ -87,7 +87,7 @@ int main(void) {
         }
 
         angleX += 5;
-        angleZ += 0;
+        angleZ += 3;
 
         Sleep(33);
     }
